@@ -1,0 +1,77 @@
+{
+  "name": "SecureAscon - Post-Quantum Messaging PWA",
+  "short_name": "SecureAscon",
+  "description": "Post-quantum lightweight messaging PWA with Ascon-80pq cryptography optimized for Meshtastic networks",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#182831",
+  "theme_color": "#0078d4",
+  "orientation": "portrait-primary",
+  "categories": ["security", "communication", "utilities"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512x512.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "features": [
+    "post-quantum cryptography",
+    "offline messaging",
+    "meshtastic integration",
+    "contact management",
+    "key sharing"
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "shortcuts": [
+    {
+      "name": "Encrypt Message",
+      "short_name": "Encrypt",
+      "description": "Quickly encrypt a message",
+      "url": "/?tab=message",
+      "icons": [
+        {
+          "src": "/icon-encrypt.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Manage Keys",
+      "short_name": "Keys",
+      "description": "Generate or share keys",
+      "url": "/?tab=keys",
+      "icons": [
+        {
+          "src": "/icon-keys.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

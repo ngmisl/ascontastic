@@ -1,0 +1,39 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0078d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#40e0d0;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="96" cy="96" r="90" fill="#182831" stroke="url(#gradient)" stroke-width="12"/>
+  
+  <!-- Lock body -->
+  <rect x="66" y="84" width="60" height="48" rx="6" fill="url(#gradient)" filter="url(#glow)"/>
+  
+  <!-- Lock shackle -->
+  <path d="M78 84 V66 C78 52.058 89.058 41 103 41 C116.942 41 128 52.058 128 66 V84" 
+        stroke="url(#gradient)" stroke-width="12" fill="none" stroke-linecap="round" filter="url(#glow)"/>
+  
+  <!-- Quantum dots (representing post-quantum security) -->
+  <circle cx="84" cy="108" r="4.8" fill="#40e0d0" opacity="0.8"/>
+  <circle cx="96" cy="108" r="4.8" fill="#0078d4" opacity="0.8"/>
+  <circle cx="108" cy="108" r="4.8" fill="#40e0d0" opacity="0.8"/>
+  
+  <!-- Small security indicator -->
+  <circle cx="96" cy="120" r="3" fill="white"/>
+  
+  <!-- Quantum wave patterns -->
+  <path d="M30 150 Q45 140 60 150 T90 150" stroke="#40e0d0" stroke-width="2" fill="none" opacity="0.4"/>
+  <path d="M102 150 Q117 140 132 150 T162 150" stroke="#0078d4" stroke-width="2" fill="none" opacity="0.4"/>
+  <path d="M30 42 Q45 32 60 42 T90 42" stroke="#40e0d0" stroke-width="2" fill="none" opacity="0.4"/>
+  <path d="M102 42 Q117 32 132 42 T162 42" stroke="#0078d4" stroke-width="2" fill="none" opacity="0.4"/>
+</svg>
