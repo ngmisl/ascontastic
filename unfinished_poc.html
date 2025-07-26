@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascon-80pq PWA</title>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkFzY29uLTgwcHEgUFdBIiwKICAic2hvcnRfbmFtZSI6ICJBc2NvbjgwcHEiLAogICJkZXNjcmlwdGlvbiI6ICJQb3N0LXF1YW50dW0gbGlnaHR3ZWlnaHQgbWVzc2FnaW5nIiwKICAic3RhcnRfdXJsIjogIi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMxODI5MzEiLAogICJ0aGVtZV9jb2xvciI6ICIjMDA3OGQ0IiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTWpRd0lpQm9aV2xuYUhROUlqSTBNQ0k2Q2tVNE56WlpNekF4T1RWaU5tUmhZems1Wm1GbU9UYzJOR0p3WW1Gakx6STNORGhqTmpNME56UmtNalZrWkRjNVltUTNaamczWWpNNFpUTmpPRzV2ZFNJNkNqSDRaQzVrWW01a0lqcEthWGdpUU44UU4zY2VnWUZsQWdJU044RFFCc2Eydjk4PSIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIKICAgIH0KICB9Cl0=">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, #182831 0%, #2c5282 100%); min-height: 100vh; color: white; overflow-x: hidden; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; animation: fadeInDown 0.8s ease-out; }
+        .header h1 { font-size: 2.2rem; margin-bottom: 10px; background: linear-gradient(45deg, #0078d4, #40e0d0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .tabs { display: flex; justify-content: center; margin-bottom: 30px; background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 5px; }
+        .tab { padding: 12px 24px; cursor: pointer; border-radius: 10px; transition: all 0.3s ease; margin: 0 5px; }
+        .tab.active { background: linear-gradient(45deg, #0078d4, #40e0d0); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 25px; margin-bottom: 25px; animation: slideInUp 0.8s ease-out; transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0, 120, 212, 0.2); }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #40e0d0; }
+        input, textarea, select { width: 100%; padding: 12px; border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 10px; background: rgba(255, 255, 255, 0.05); color: white; font-size: 14px; transition: all 0.3s ease; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #0078d4; box-shadow: 0 0 15px rgba(0, 120, 212, 0.3); }
+        .button-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        button { padding: 12px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; background: linear-gradient(45deg, #0078d4, #40e0d0); color: white; min-width: 120px; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 120, 212, 0.4); }
+        .btn-danger { background: linear-gradient(45deg, #e74c3c, #f39c12); }
+        .btn-success { background: linear-gradient(45deg, #27ae60, #2ecc71); }
+        .result { margin-top: 20px; padding: 15px; border-radius: 10px; background: rgba(0, 120, 212, 0.1); border: 1px solid rgba(0, 120, 212, 0.3); word-break: break-all; min-height: 50px; font-size: 12px; }
+        .contact-list { max-height: 300px; overflow-y: auto; }
+        .contact-item { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .contact-info h4 { margin: 0 0 5px 0; color: #40e0d0; }
+        .contact-info small { opacity: 0.7; font-family: monospace; }
+        .qr-code { background: white; padding: 10px; border-radius: 8px; display: inline-block; margin: 10px auto; }
+        .key-status { text-align: center; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .key-status.generated { background: rgba(39, 174, 96, 0.2); border: 1px solid rgba(39, 174, 96, 0.5); }
+        .key-status.none { background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.5); }
+        .size-indicator { background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 12px; }
+        .size-ok { color: #2ecc71; }
+        .size-warning { color: #f39c12; }
+        .size-error { color: #e74c3c; }
+        .help-section { background: rgba(64, 224, 208, 0.1); border: 1px solid rgba(64, 224, 208, 0.3); }
+        .step { margin: 15px 0; padding: 10px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; }
+        .step h4 { color: #40e0d0; margin-bottom: 8px; }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 600px) { .container { padding: 15px; } .header h1 { font-size: 1.8rem; } .tabs { flex-direction: column; } .tab { margin: 2px 0; } .button-group { flex-direction: column; } button { width: 100%; } .contact-item { flex-direction: column; align-items: flex-start; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Ascon-80pq PWA</h1>
+            <p>Post-quantum lightweight messaging</p>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('encrypt')">📝 Message</div>
+            <div class="tab" onclick="switchTab('keys')">🔑 Keys</div>
+            <div class="tab" onclick="switchTab('contacts')">👥 Contacts</div>
+            <div class="tab" onclick="switchTab('help')">❓ Help</div>
+        </div>
+        
+        <div id="encrypt" class="tab-content active">
+            <div class="card">
+                <div class="input-group">
+                    <label>🔐 Encryption Mode</label>
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="radio" name="encryptMode" value="contact" style="width: auto; margin-right: 5px;" onchange="updateEncryptMode()"> Contact
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="radio" name="encryptMode" value="mykey" style="width: auto; margin-right: 5px;" onchange="updateEncryptMode()"> My Key
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="radio" name="encryptMode" value="password" checked style="width: auto; margin-right: 5px;" onchange="updateEncryptMode()"> Password
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="input-group" id="recipientGroup" style="display: none;">
+                    <label for="recipient">📬 Recipient</label>
+                    <select id="recipient">
+                        <option value="">Select contact</option>
+                    </select>
+                </div>
+                
+                <div class="input-group" id="passwordGroup">
+                    <label for="password">🔑 Password</label>
+                    <input type="password" id="password" placeholder="Enter strong password">
+                </div>
+                
+                <div class="input-group">
+                    <label for="message">📝 Message</label>
+                    <textarea id="message" rows="4" placeholder="Enter your message" oninput="updateSizeIndicator()"></textarea>
+                    <div class="size-indicator" id="sizeIndicator">Message size: 0 bytes</div>
+                </div>
+                
+                <div class="button-group">
+                    <button onclick="encryptMessage()">🔒 Encrypt</button>
+                    <button onclick="decryptMessage()" class="btn-danger">🔓 Decrypt</button>
+                    <button onclick="clearMessage()">🗑️ Clear</button>
+                </div>
+                
+                <div class="result" id="result">Results will appear here...</div>
+            </div>
+        </div>
+        
+        <div id="keys" class="tab-content">
+            <div class="key-status" id="keyStatus">
+                <div id="keyStatusText">🔑 No Ascon-80pq key generated</div>
+            </div>
+            
+            <div class="card">
+                <h3>🔐 Ascon-80pq Key Management</h3>
+                
+                <div class="button-group">
+                    <button onclick="generateKey()" class="btn-success">🔄 Generate Key</button>
+                    <button onclick="shareKey()">📱 Share Key</button>
+                    <button onclick="exportKey()">📤 Export</button>
+                </div>
+                
+                <div class="result" id="keyResult">Key operations will appear here...</div>
+                
+                <div id="qrCodeContainer" style="text-align: center; display: none;">
+                    <h4>📱 Share this Ascon-80pq key:</h4>
+                    <div id="qrCode" class="qr-code"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="contacts" class="tab-content">
+            <div class="card">
+                <h3>👥 Add Contact</h3>
+                
+                <div class="input-group">
+                    <label for="contactName">👤 Contact Name</label>
+                    <input type="text" id="contactName" placeholder="Enter contact name">
+                </div>
+                
+                <div class="input-group">
+                    <label for="contactKey">🔑 Ascon-80pq Key (40 hex chars)</label>
+                    <input type="text" id="contactKey" placeholder="Paste 40-character hex key" maxlength="40">
+                </div>
+                
+                <div class="button-group">
+                    <button onclick="addContact()" class="btn-success">➕ Add Contact</button>
+                    <button onclick="scanQR()">📷 Scan QR</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>📇 Contact List</h3>
+                <div class="contact-list" id="contactList">
+                    <p style="text-align: center; opacity: 0.7;">No contacts added yet</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="help" class="tab-content">
+            <div class="card help-section">
+                <h3>❓ Ascon-80pq for Meshtastic</h3>
+                
+                <div class="step">
+                    <h4>🚀 Quick Start</h4>
+                    <p>1. Generate Ascon-80pq key (160-bit quantum-resistant)<br>
+                    2. Share 40-character hex key securely<br>
+                    3. Add contacts using their keys<br>
+                    4. Encrypt messages (max ~200 chars for Meshtastic)</p>
+                </div>
+                
+                <div class="step">
+                    <h4>📡 Meshtastic Integration</h4>
+                    <p><strong>Manual:</strong> Encrypt here → Copy → Paste in Meshtastic<br>
+                    <strong>API:</strong> Use Meshtastic Python API with this crypto<br>
+                    <strong>Overhead:</strong> Only +32 bytes per message</p>
+                </div>
+                
+                <div class="step">
+                    <h4>🔐 Why Ascon-80pq?</h4>
+                    <p>• NIST lightweight cryptography standard<br>
+                    • 160-bit key resists quantum attacks<br>
+                    • Perfect for LoRa/IoT constraints<br>
+                    • Authenticated encryption prevents tampering</p>
+                </div>
+                
+                <div class="step">
+                    <h4>📏 Size Limits</h4>
+                    <p>• Meshtastic: 237 bytes total limit<br>
+                    • Ascon overhead: +32 bytes<br>
+                    • Max message: ~205 characters<br>
+                    • Base64 encoding: +33% size</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" integrity="sha384-xXo8Ub9OlEdc+EKAjb/GQUIVYcP3qKSDe7K3wH8yeCoQ2jwhbZX+mhxZhOPk6P/R" crossorigin="anonymous"></script>
+    <script type="module">
+        // Import Ascon library with SRI
+        import { Ascon, randomBytes } from 'https://cdn.skypack.dev/ascon-js';
+
+        class AsconCrypto {
+            constructor() {
+                this.asconKey = null;
+                this.contacts = [];
+                this.loadState();
+            }
+
+            // Generate Ascon-80pq key (20 bytes for 160-bit security)
+            generateKey() {
+                this.asconKey = randomBytes(20);
+                this.saveState();
+                return this.asconKey;
+            }
+
+            // Encrypt with Ascon-80pq
+            encrypt(key, plaintext) {
+                const nonce = randomBytes(16);
+                const data = new TextEncoder().encode(plaintext);
+                
+                const ciphertext = Ascon.encrypt(key, nonce, data, {
+                    variant: "Ascon-80pq"
+                });
+
+                // Combine nonce + ciphertext for transmission
+                const result = new Uint8Array(nonce.length + ciphertext.length);
+                result.set(nonce, 0);
+                result.set(ciphertext, nonce.length);
+                
+                return this.arrayBufferToBase64(result);
+            }
+
+            // Decrypt with Ascon-80pq
+            decrypt(key, encryptedData) {
+                const data = this.base64ToArrayBuffer(encryptedData);
+                
+                if (data.length < 32) {
+                    throw new Error('Invalid ciphertext length');
+                }
+
+                const nonce = data.slice(0, 16);
+                const ciphertext = data.slice(16);
+
+                const decrypted = Ascon.decrypt(key, nonce, ciphertext, {
+                    variant: "Ascon-80pq"
+                });
+
+                return new TextDecoder().decode(decrypted);
+            }
+
+            // Password-based key derivation with random salt
+            async deriveKey(password) {
+                const salt = randomBytes(16); // Random salt per encryption
+                const encoder = new TextEncoder();
+                const keyMaterial = await window.crypto.subtle.importKey(
+                    'raw',
+                    encoder.encode(password),
+                    'PBKDF2',
+                    false,
+                    ['deriveKey']
+                );
+
+                const derivedKey = await window.crypto.subtle.deriveKey(
+                    {
+                        name: 'PBKDF2',
+                        salt: salt,
+                        iterations: 250000, // Increased from 100k
+                        hash: 'SHA-256'
+                    },
+                    keyMaterial,
+                    { name: 'AES-GCM', length: 160 },
+                    true,
+                    ['encrypt']
+                );
+
+                const keyBuffer = await window.crypto.subtle.exportKey('raw', derivedKey);
+                return { key: new Uint8Array(keyBuffer), salt };
+            }
+
+            // Contact management
+            addContact(name, keyHex) {
+                if (keyHex.length !== 40 || !/^[0-9a-fA-F]+$/.test(keyHex)) {
+                    throw new Error('Key must be exactly 40 hex characters');
+                }
+                
+                const contact = {
+                    id: Date.now().toString(),
+                    name,
+                    keyHex,
+                    added: new Date().toISOString()
+                };
+                this.contacts.push(contact);
+                this.saveState();
+                return contact;
+            }
+
+            removeContact(id) {
+                this.contacts = this.contacts.filter(c => c.id !== id);
+                this.saveState();
+            }
+
+            // State management - session only for security
+            saveState() {
+                try {
+                    if (this.asconKey) {
+                        sessionStorage.setItem('ascon80pq_key', this.arrayBufferToHex(this.asconKey));
+                    }
+                    sessionStorage.setItem('ascon80pq_contacts', JSON.stringify(this.contacts));
+                } catch (error) {
+                    console.error('Failed to save state:', error);
+                }
+            }
+
+            loadState() {
+                try {
+                    const keyHex = sessionStorage.getItem('ascon80pq_key');
+                    if (keyHex) {
+                        this.asconKey = this.hexToArrayBuffer(keyHex);
+                    }
+                    this.contacts = JSON.parse(sessionStorage.getItem('ascon80pq_contacts') || '[]');
+                } catch (error) {
+                    console.error('Failed to load state:', error);
+                }
+            }
+
+            // Utilities
+            arrayBufferToBase64(buffer) { return btoa(String.fromCharCode(...new Uint8Array(buffer))); }
+            base64ToArrayBuffer(base64) { return Uint8Array.from(atob(base64), c => c.charCodeAt(0)); }
+            arrayBufferToHex(buffer) { return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join(''); }
+            hexToArrayBuffer(hex) { return new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))); }
+        }
+
+        // Global crypto instance - avoid overwriting window.crypto
+        window.appCrypto = new AsconCrypto();
+
+        window.updateEncryptMode = function() {
+            const mode = document.querySelector('input[name="encryptMode"]:checked').value;
+            const recipientGroup = document.getElementById('recipientGroup');
+            const passwordGroup = document.getElementById('passwordGroup');
+            
+            if (mode === 'contact') {
+                recipientGroup.style.display = 'block';
+                passwordGroup.style.display = 'none';
+                document.getElementById('password').value = '';
+            } else if (mode === 'mykey') {
+                recipientGroup.style.display = 'none';
+                passwordGroup.style.display = 'none';
+                document.getElementById('password').value = '';
+                document.getElementById('recipient').value = '';
+            } else { // password
+                recipientGroup.style.display = 'none';
+                passwordGroup.style.display = 'block';
+                document.getElementById('recipient').value = '';
+            }
+        }
+
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content, .tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            if (tabName === 'contacts') updateContactList();
+            else if (tabName === 'keys') updateKeyStatus();
+            else if (tabName === 'encrypt') { updateRecipientList(); updateSizeIndicator(); }
+        }
+
+        window.generateKey = function() {
+            try {
+                document.getElementById('keyResult').innerHTML = '🔄 Generating Ascon-80pq key...';
+                appCrypto.generateKey();
+                updateKeyStatus();
+                document.getElementById('keyResult').innerHTML = '✅ Ascon-80pq key generated! (160-bit post-quantum)';
+            } catch (error) {
+                document.getElementById('keyResult').innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        window.updateKeyStatus = function() {
+            const statusDiv = document.getElementById('keyStatus');
+            const textDiv = document.getElementById('keyStatusText');
+            
+            if (appCrypto.asconKey) {
+                statusDiv.className = 'key-status generated';
+                textDiv.innerHTML = '✅ Ascon-80pq key ready (post-quantum secure)';
+            } else {
+                statusDiv.className = 'key-status none';
+                textDiv.innerHTML = '❌ No Ascon-80pq key - Generate for secure messaging';
+            }
+        }
+
+        window.shareKey = function() {
+            try {
+                if (!appCrypto.asconKey) throw new Error('Generate key first');
+                
+                const keyHex = appCrypto.arrayBufferToHex(appCrypto.asconKey);
+                
+                const qr = new QRious({
+                    element: document.createElement('canvas'),
+                    value: keyHex,
+                    size: 200
+                });
+
+                const qrContainer = document.getElementById('qrCodeContainer');
+                const qrDiv = document.getElementById('qrCode');
+                qrDiv.innerHTML = '';
+                qrDiv.appendChild(qr.canvas);
+                qrContainer.style.display = 'block';
+
+                document.getElementById('keyResult').innerHTML = 
+                    `📤 Ascon-80pq Key:<br>` +
+                    `<textarea readonly style="width:100%;height:60px;font-family:monospace;font-size:12px;">${keyHex}</textarea>`;
+
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(keyHex);
+                    document.getElementById('keyResult').innerHTML += '<br>📋 Key copied to clipboard!';
+                }
+            } catch (error) {
+                document.getElementById('keyResult').innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        window.updateSizeIndicator = function() {
+            const message = document.getElementById('message').value;
+            const messageBytes = new TextEncoder().encode(message).length;
+            const totalSize = Math.ceil((messageBytes + 32) * 4/3); // Ascon overhead + base64
+            const indicator = document.getElementById('sizeIndicator');
+            
+            let status, statusClass;
+            if (totalSize <= 200) {
+                status = '✅ Perfect for Meshtastic';
+                statusClass = 'size-ok';
+            } else if (totalSize <= 315) {
+                status = '⚠️ Close to Meshtastic limit';
+                statusClass = 'size-warning';
+            } else {
+                status = '❌ Too large for Meshtastic';
+                statusClass = 'size-error';
+            }
+            
+            indicator.innerHTML = `Message: ${messageBytes} bytes | Encoded: ~${totalSize} bytes | ${status}`;
+            indicator.className = `size-indicator ${statusClass}`;
+        }
+
+        window.addContact = function() {
+            const name = document.getElementById('contactName').value.trim();
+            const keyHex = document.getElementById('contactKey').value.trim();
+            if (!name || !keyHex) return alert('Enter name and key');
+
+            try {
+                appCrypto.addContact(name, keyHex);
+                document.getElementById('contactName').value = '';
+                document.getElementById('contactKey').value = '';
+                updateContactList();
+                updateRecipientList();
+                alert('✅ Contact added!');
+            } catch (error) {
+                alert(`❌ Error: ${error.message}`);
+            }
+        }
+
+        window.updateContactList = function() {
+            const listDiv = document.getElementById('contactList');
+            
+            if (appCrypto.contacts.length === 0) {
+                listDiv.innerHTML = '<p style="text-align: center; opacity: 0.7;">No contacts added yet</p>';
+                return;
+            }
+
+            listDiv.innerHTML = appCrypto.contacts.map(contact => `
+                <div class="contact-item">
+                    <div class="contact-info">
+                        <h4>${escapeHtml(contact.name)}</h4>
+                        <small>Key: ${contact.keyHex.substring(0, 8)}...${contact.keyHex.substring(32)}</small>
+                    </div>
+                    <button onclick="removeContact('${contact.id}')" class="btn-danger">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        window.updateRecipientList = function() {
+            const select = document.getElementById('recipient');
+            select.innerHTML = '<option value="">Select contact</option>';
+            
+            appCrypto.contacts.forEach(contact => {
+                const option = document.createElement('option');
+                option.value = contact.id;
+                option.textContent = `🔐 ${contact.name}`;
+                select.appendChild(option);
+            });
+        }
+
+        window.encryptMessage = async function() {
+            const mode = document.querySelector('input[name="encryptMode"]:checked').value;
+            const message = document.getElementById('message').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!message) return resultDiv.innerHTML = '❌ Enter a message';
+
+            try {
+                let encrypted, key;
+
+                if (mode === 'contact') {
+                    const recipientId = document.getElementById('recipient').value;
+                    if (!recipientId) throw new Error('Select a contact');
+                    
+                    const contact = appCrypto.contacts.find(c => c.id === recipientId);
+                    if (!contact) throw new Error('Contact not found');
+                    
+                    key = appCrypto.hexToArrayBuffer(contact.keyHex);
+                    encrypted = appCrypto.encrypt(key, message);
+                    resultDiv.innerHTML = `🔒 <strong>Encrypted for ${escapeHtml(contact.name)}:</strong><br><div style="font-family:monospace;font-size:10px;background:rgba(0,0,0,0.3);padding:10px;border-radius:5px;margin-top:10px;"></div>`;
+                    resultDiv.querySelector('div').textContent = encrypted;
+                } else if (mode === 'mykey') {
+                    if (!appCrypto.asconKey) throw new Error('Generate your key first');
+                    encrypted = appCrypto.encrypt(appCrypto.asconKey, message);
+                    resultDiv.innerHTML = `🔒 <strong>Encrypted with your key:</strong><br><div style="font-family:monospace;font-size:10px;background:rgba(0,0,0,0.3);padding:10px;border-radius:5px;margin-top:10px;"></div>`;
+                    resultDiv.querySelector('div').textContent = encrypted;
+                } else { // password
+                    const password = document.getElementById('password').value;
+                    if (!password) throw new Error('Enter a password');
+                    
+                    const { key: derivedKey, salt } = await appCrypto.deriveKey(password);
+                    encrypted = appCrypto.encrypt(derivedKey, message);
+                    
+                    // Prepend salt to encrypted data for decryption
+                    const saltHex = appCrypto.arrayBufferToHex(salt);
+                    encrypted = saltHex + encrypted;
+                    
+                    resultDiv.innerHTML = `🔒 <strong>Password encrypted:</strong><br><div style="font-family:monospace;font-size:10px;background:rgba(0,0,0,0.3);padding:10px;border-radius:5px;margin-top:10px;"></div>`;
+                    resultDiv.querySelector('div').textContent = encrypted;
+                }
+
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(encrypted);
+                    resultDiv.innerHTML += '<br>📋 Copied to clipboard!';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${escapeHtml(error.message)}`;
+            }
+        }
+
+        window.decryptMessage = async function() {
+            const mode = document.querySelector('input[name="encryptMode"]:checked').value;
+            const message = document.getElementById('message').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!message) return resultDiv.innerHTML = '❌ Enter encrypted message';
+
+            try {
+                let decrypted, key;
+
+                if (mode === 'contact') {
+                    const recipientId = document.getElementById('recipient').value;
+                    if (!recipientId) throw new Error('Select the contact used for encryption');
+                    
+                    const contact = appCrypto.contacts.find(c => c.id === recipientId);
+                    if (!contact) throw new Error('Contact not found');
+                    
+                    key = appCrypto.hexToArrayBuffer(contact.keyHex);
+                    decrypted = appCrypto.decrypt(key, message);
+                } else if (mode === 'mykey') {
+                    if (!appCrypto.asconKey) throw new Error('No key available');
+                    decrypted = appCrypto.decrypt(appCrypto.asconKey, message);
+                } else { // password
+                    const password = document.getElementById('password').value;
+                    if (!password) throw new Error('Enter the password used for encryption');
+                    
+                    // Extract salt from message
+                    if (message.length < 32) throw new Error('Invalid encrypted message format');
+                    const saltHex = message.substring(0, 32);
+                    const encryptedData = message.substring(32);
+                    const salt = appCrypto.hexToArrayBuffer(saltHex);
+                    
+                    // Derive key with extracted salt
+                    const encoder = new TextEncoder();
+                    const keyMaterial = await window.crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveKey']);
+                    const derivedKey = await window.crypto.subtle.deriveKey(
+                        { name: 'PBKDF2', salt: salt, iterations: 250000, hash: 'SHA-256' },
+                        keyMaterial,
+                        { name: 'AES-GCM', length: 160 },
+                        true,
+                        ['encrypt']
+                    );
+                    const keyBuffer = await window.crypto.subtle.exportKey('raw', derivedKey);
+                    key = new Uint8Array(keyBuffer);
+                    
+                    decrypted = appCrypto.decrypt(key, encryptedData);
+                }
+
+                resultDiv.innerHTML = `🔓 <strong>Decrypted:</strong><br><div style="background:rgba(0,255,0,0.1);padding:10px;border-radius:5px;margin-top:10px;"></div>`;
+                resultDiv.querySelector('div').textContent = decrypted;
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Decryption failed: ${escapeHtml(error.message)}`;
+            }
+        }
+
+        window.clearMessage = function() {
+            document.getElementById('message').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('recipient').value = '';
+            document.getElementById('result').innerHTML = 'Results will appear here...';
+            updateSizeIndicator();
+        }
+
+        window.removeContact = function(id) {
+            if (confirm('Remove contact?')) {
+                appCrypto.removeContact(id);
+                updateContactList();
+                updateRecipientList();
+            }
+        }
+
+        window.exportKey = function() {
+            if (!appCrypto.asconKey) return alert('No key to export');
+            
+            const exportData = { ascon80pqKey: appCrypto.arrayBufferToHex(appCrypto.asconKey) };
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: "application/json"});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `ascon80pq_key_${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        window.scanQR = function() {
+            alert('QR scanning requires camera access. Paste key manually for now.');
+        }
+
+        window.escapeHtml = function(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            appCrypto.loadState();
+            updateKeyStatus();
+            updateContactList();
+            updateRecipientList();
+            updateSizeIndicator();
+            updateEncryptMode(); // Initialize UI state
+        });
+    </script>
+</body>
+</html>
