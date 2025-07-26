@@ -50,8 +50,8 @@ bun --version
 ### Development
 ```bash
 # Clone the repository
-git clone <repo-url>
-cd secureascon
+git clone https://github.com/ngmisl/ascontastic
+cd ascontastic
 
 # Install dependencies
 bun install
@@ -250,8 +250,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 - 📖 **Documentation**: See the Help tab in the application
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/user/secureascon/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/user/secureascon/discussions)
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/ngmisl/ascontastic/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/ngmisl/ascontastic/discussions)
+- 💬 **Support**: [https://fourzerofour.fkey.id](https://fourzerofour.fkey.id)
 - 🔒 **Security**: Report vulnerabilities to security@secureascon.dev
 
 ---

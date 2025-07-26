@@ -189,6 +189,43 @@ export function HelpTab() {
             </div>
           </div>
 
+          {/* Links & Support */}
+          <div className="space-y-3">
+            <h4 className="font-semibold text-cyan-400 flex items-center gap-2">
+              🔗 Links & Support
+            </h4>
+            <div className="grid gap-3 md:grid-cols-2">
+              <a 
+                href="https://github.com/ngmisl/ascontastic"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-4 rounded-lg bg-muted/30 border hover:bg-muted/50 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">🐙</div>
+                  <div>
+                    <div className="font-medium group-hover:text-cyan-400 transition-colors">GitHub Repository</div>
+                    <div className="text-sm text-muted-foreground">Source code & issues</div>
+                  </div>
+                </div>
+              </a>
+              <a 
+                href="https://fourzerofour.fkey.id"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-4 rounded-lg bg-muted/30 border hover:bg-muted/50 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">💬</div>
+                  <div>
+                    <div className="font-medium group-hover:text-cyan-400 transition-colors">Support</div>
+                    <div className="text-sm text-muted-foreground">Get help & assistance</div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+
         </CardContent>
       </Card>
     </div>

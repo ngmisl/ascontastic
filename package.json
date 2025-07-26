@@ -3,6 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://github.com/ngmisl/ascontastic",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ngmisl/ascontastic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ngmisl/ascontastic/issues"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
