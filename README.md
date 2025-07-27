@@ -252,8 +252,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 📖 **Documentation**: See the Help tab in the application
 - 🐛 **Bug Reports**: [GitHub Issues](https://github.com/ngmisl/ascontastic/issues)
 - 💬 **Discussions**: [GitHub Discussions](https://github.com/ngmisl/ascontastic/discussions)
-- 💬 **Support**: [https://fourzerofour.fkey.id](https://fourzerofour.fkey.id)
-- 🔒 **Security**: Report vulnerabilities to security@secureascon.dev
+- 💬 **Donate❤️**: [https://fourzerofour.fkey.id](https://fourzerofour.fkey.id)
 
 ---
 
