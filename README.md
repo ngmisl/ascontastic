@@ -7,7 +7,7 @@ A modern, production-ready Progressive Web App implementing **Ascon-80pq** post-
 ![Vite](https://img.shields.io/badge/Vite-5.0+-646CFF?style=flat&logo=vite)
 ![Bun](https://img.shields.io/badge/Bun-1.0+-000000?style=flat&logo=bun)
 ![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=flat)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat)[![CodeQL](https://github.com/ngmisl/ascontastic/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/ngmisl/ascontastic/actions/workflows/github-code-scanning/codeql)
 
 ## ✨ Features
 
