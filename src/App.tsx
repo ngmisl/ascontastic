@@ -1,3 +1,6 @@
+import { useEffect } from "react"
+import { useCryptoStore } from "@/stores/crypto-store"
+import { LockScreen } from "@/components/crypto/lock-screen"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MessagingTab } from "@/components/messaging/messaging-tab"
 import { KeyManagementTab } from "@/components/crypto/key-management-tab"
@@ -5,11 +8,27 @@ import { ContactsTab } from "@/components/contacts/contacts-tab"
 import { HelpTab } from "@/components/help/help-tab"
 
 function App() {
-  return (
-    <div className="min-h-screen" style={{
-      background: "linear-gradient(135deg, hsl(var(--background)) 0%, hsl(217 32% 34%) 100%)"
-    }}>
-      <div className="container max-w-4xl mx-auto px-4 py-6">
+  const { isInitialized, isLocked, initialize } = useCryptoStore()
+
+  useEffect(() => {
+    if (!isInitialized) {
+      initialize()
+    }
+  }, [isInitialized, initialize])
+
+  const renderContent = () => {
+    if (!isInitialized) {
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-2xl">Initializing...</div>
+        </div>
+      )
+    }
+    if (isLocked) {
+      return <LockScreen />
+    }
+    return (
+      <>
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-3 gradient-text">
@@ -53,6 +72,16 @@ function App() {
             <HelpTab />
           </TabsContent>
         </Tabs>
+      </>
+    )
+  }
+
+  return (
+    <div className="min-h-screen" style={{
+      background: "linear-gradient(135deg, hsl(var(--background)) 0%, hsl(217 32% 34%) 100%)"
+    }}>
+      <div className="container max-w-4xl mx-auto px-4 py-6">
+        {renderContent()}
       </div>
     </div>
   )

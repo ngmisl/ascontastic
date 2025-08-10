@@ -36,3 +36,9 @@ export interface StorageState {
   asconKey: string | null;
   contacts: Contact[];
 }
+
+export interface EncryptedStorageState {
+  salt: string;
+  iv: string;
+  data: string;
+}

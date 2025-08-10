@@ -7,23 +7,49 @@ export function HelpTab() {
       <Card className="glass-card border-cyan-500/20 bg-cyan-500/5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-cyan-400">
-            ❓ Ascon-80pq for Meshtastic
+            ❓ Help & Information
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           
-          {/* Quick Start */}
+          {/* Step-by-Step Tutorial */}
           <div className="space-y-3">
             <h4 className="font-semibold text-cyan-400 flex items-center gap-2">
-              🚀 Quick Start
+              🚀 Step-by-Step Tutorial
             </h4>
             <div className="p-4 rounded-lg bg-muted/30 border">
-              <ol className="space-y-2 text-sm">
-                <li><strong>1.</strong> Generate Ascon-80pq key (160-bit quantum-resistant)</li>
-                <li><strong>2.</strong> Share 40-character hex key securely with contacts</li>
-                <li><strong>3.</strong> Add contacts using their shared keys</li>
-                <li><strong>4.</strong> Encrypt messages (max ~200 chars for Meshtastic)</li>
+              <ol className="space-y-3 text-sm">
+                <li><strong>1. Create Your Secure Vault:</strong> When you first open the app, you'll be asked to create a master password. Choose a strong, memorable password. <strong className="text-red-400">This password cannot be recovered!</strong></li>
+                <li><strong>2. Generate Your Private Key:</strong> Go to the <Badge variant="outline">🔑 Keys</Badge> tab and click "🔄 Generate". This creates your unique, quantum-resistant private key, now saved in your vault.</li>
+                <li><strong>3. Share & Add Contacts:</strong> On the <Badge variant="outline">🔑 Keys</Badge> tab, click "📱 Share" to get your key. Securely send it to contacts. Then, go to the <Badge variant="outline">👥 Contacts</Badge> tab to add their keys.</li>
+                <li><strong>4. Manage Your Data:</strong> Use the "📥 Import" and "📤 Export" buttons on the Keys and Contacts tabs to back up and restore your data.</li>
+                <li><strong>5. Send a Secure Message:</strong> Go to the <Badge variant="outline">📝 Message</Badge> tab, choose an encryption mode, type your message, encrypt, and copy the result.</li>
               </ol>
+            </div>
+          </div>
+
+          {/* FAQ */}
+          <div className="space-y-3">
+            <h4 className="font-semibold text-cyan-400 flex items-center gap-2">
+              ❓ Frequently Asked Questions (FAQ)
+            </h4>
+            <div className="space-y-3 text-sm">
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <div className="font-medium text-accent mb-1">What is the master password?</div>
+                <p className="text-muted-foreground">It's the password you create to encrypt and lock your private key and contacts in a secure vault in your browser. It's the only way to access your data.</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <div className="font-medium text-accent mb-1">What happens if I forget my master password?</div>
+                <p className="text-muted-foreground"><strong className="text-red-400">Your data will be permanently inaccessible.</strong> There is no recovery option. We cannot help you as the password is never stored.</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <div className="font-medium text-accent mb-1">Where is my data stored?</div>
+                <p className="text-muted-foreground">Your encrypted data is stored in your browser's local storage. It stays on your device and is never sent to a server.</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <div className="font-medium text-accent mb-1">How do I move my data to a new device?</div>
+                <p className="text-muted-foreground">Use the "Export" feature on both the Keys and Contacts tabs on your old device. Then on the new device, create a vault and use the "Import" feature.</p>
+              </div>
             </div>
           </div>
 
@@ -146,12 +172,11 @@ export function HelpTab() {
             </h4>
             <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
               <ul className="text-sm space-y-1 text-muted-foreground">
-                <li>• <strong>Verify keys in person</strong> or through secure channels</li>
-                <li>• <strong>Export and backup</strong> your keys before closing the browser</li>
-                <li>• <strong>Use strong passwords</strong> for password-based encryption</li>
-                <li>• <strong>Clear browser data</strong> when using shared computers</li>
-                <li>• <strong>Generate new keys</strong> if compromise is suspected</li>
-                <li>• <strong>Test message sizes</strong> before important communications</li>
+                <li>• <strong>Remember your master password.</strong> It cannot be recovered.</li>
+                <li>• <strong>Verify contact keys</strong> in person or through a trusted channel.</li>
+                <li>• <strong>Regularly back up</strong> your private key and contacts using the Export functions.</li>
+                <li>• <strong>Use "Clear All Data"</strong> and clear browser history if using a shared computer.</li>
+                <li>• <strong>Generate a new key</strong> if you suspect your old one is compromised.</li>
               </ul>
             </div>
           </div>
@@ -163,28 +188,28 @@ export function HelpTab() {
             </h4>
             <div className="grid gap-3 md:grid-cols-2 text-sm">
               <div className="p-3 rounded-lg bg-muted/30 border">
-                <div className="font-medium mb-1">Algorithm</div>
-                <div className="text-muted-foreground">Ascon-80pq AEAD</div>
+                <div className="font-medium mb-1">AEAD Algorithm</div>
+                <div className="text-muted-foreground">Ascon-80pq</div>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border">
-                <div className="font-medium mb-1">Key Size</div>
-                <div className="text-muted-foreground">160 bits (20 bytes)</div>
+                <div className="font-medium mb-1">Vault Encryption</div>
+                <div className="text-muted-foreground">AES-GCM (256-bit)</div>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border">
-                <div className="font-medium mb-1">Nonce Size</div>
-                <div className="text-muted-foreground">128 bits (16 bytes)</div>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/30 border">
-                <div className="font-medium mb-1">Tag Size</div>
-                <div className="text-muted-foreground">128 bits (16 bytes)</div>
+                <div className="font-medium mb-1">Key Derivation</div>
+                <div className="text-muted-foreground">PBKDF2 (SHA-256)</div>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border">
                 <div className="font-medium mb-1">PBKDF2 Iterations</div>
-                <div className="text-muted-foreground">250,000 rounds</div>
+                <div className="text-muted-foreground">300,000 rounds</div>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border">
                 <div className="font-medium mb-1">Storage</div>
-                <div className="text-muted-foreground">Session only</div>
+                <div className="text-muted-foreground">Encrypted Local Storage</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <div className="font-medium mb-1">Ascon-80pq Key Size</div>
+                <div className="text-muted-foreground">160 bits (20 bytes)</div>
               </div>
             </div>
           </div>

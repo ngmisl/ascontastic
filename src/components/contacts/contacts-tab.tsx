@@ -10,35 +10,89 @@ import { toast } from "sonner"
 import type { Contact } from "@/types/crypto"
 
 export function ContactsTab() {
-  const { contacts, addContact, removeContact } = useCryptoStore()
+  const { contacts, addContact, removeContact, exportContacts, importContacts } = useCryptoStore()
   const [contactName, setContactName] = useState("")
   const [contactKey, setContactKey] = useState("")
+  const [isLoading, setIsLoading] = useState({
+    add: false,
+    import: false,
+    export: false,
+  })
+  const [removingId, setRemovingId] = useState<string | null>(null)
 
-  const handleAddContact = () => {
-    if (!contactName.trim()) {
-      toast.error("Please enter a contact name")
-      return
-    }
-
-    if (!contactKey.trim()) {
-      toast.error("Please enter the contact's key")
-      return
-    }
-
+  const handleAddContact = async () => {
+    if (!contactName.trim() || contactKey.length !== 40) return
+    setIsLoading(prev => ({ ...prev, add: true }))
     try {
-      addContact(contactName.trim(), contactKey.trim())
+      await addContact(contactName.trim(), contactKey.trim())
       setContactName("")
       setContactKey("")
       toast.success("✅ Contact added successfully!")
     } catch (error: any) {
       toast.error(`Failed to add contact: ${error.message}`)
+    } finally {
+      setIsLoading(prev => ({ ...prev, add: false }))
     }
   }
 
-  const handleRemoveContact = (contact: Contact) => {
+  const handleExportContacts = () => {
+    setIsLoading(prev => ({ ...prev, export: true }))
+    try {
+      const exportData = exportContacts()
+      if (!exportData) {
+        toast.info("No contacts to export.")
+        return
+      }
+      const blob = new Blob([exportData], { type: "application/json" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `ascon_contacts_${Date.now()}.json`
+      link.click()
+      URL.revokeObjectURL(url)
+      toast.success("Contacts exported successfully!")
+    } catch (error: any) {
+      toast.error(`Export failed: ${error.message}`)
+    } finally {
+      setIsLoading(prev => ({ ...prev, export: false }))
+    }
+  }
+
+  const handleImportContacts = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      setIsLoading(prev => ({ ...prev, import: true }))
+      try {
+        const content = await file.text()
+        const result = await importContacts(content)
+        toast.success(`Import complete: ${result.imported} new contacts added.`, {
+          description: `${result.duplicates} duplicates were ignored.`,
+        })
+      } catch (error: any) {
+        toast.error(`Import failed: ${error.message}`)
+      } finally {
+        setIsLoading(prev => ({ ...prev, import: false }))
+      }
+    }
+    input.click()
+  }
+
+  const handleRemoveContact = async (contact: Contact) => {
     if (window.confirm(`Remove contact "${contact.name}"?`)) {
-      removeContact(contact.id)
-      toast.success(`Contact "${contact.name}" removed`)
+      setRemovingId(contact.id)
+      try {
+        await removeContact(contact.id)
+        toast.success(`Contact "${contact.name}" removed`)
+      } catch (error: any) {
+        toast.error(`Failed to remove contact: ${error.message}`)
+      } finally {
+        setRemovingId(null)
+      }
     }
   }
 
@@ -99,13 +153,14 @@ export function ContactsTab() {
             <Button 
               onClick={handleAddContact}
               className="bg-green-600 hover:bg-green-700"
-              disabled={!contactName.trim() || contactKey.length !== 40}
+              disabled={isLoading.add || !contactName.trim() || contactKey.length !== 40}
             >
-              ➕ Add Contact
+              {isLoading.add ? 'Adding...' : '➕ Add Contact'}
             </Button>
             <Button 
               onClick={handleScanQR}
               variant="outline"
+              disabled
             >
               📷 Scan QR
             </Button>
@@ -116,12 +171,22 @@ export function ContactsTab() {
       {/* Contact List */}
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            📇 Contact List
-            <Badge variant="secondary" className="ml-2">
-              {contacts.length} contact{contacts.length !== 1 ? 's' : ''}
-            </Badge>
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center gap-2">
+              📇 Contact List
+              <Badge variant="secondary" className="ml-2">
+                {contacts.length}
+              </Badge>
+            </CardTitle>
+            <div className="flex gap-2">
+              <Button onClick={handleImportContacts} variant="outline" size="sm" disabled={isLoading.import}>
+                {isLoading.import ? '...' : '📥 Import'}
+              </Button>
+              <Button onClick={handleExportContacts} variant="outline" size="sm" disabled={isLoading.export || contacts.length === 0}>
+                {isLoading.export ? '...' : '📤 Export'}
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {contacts.length === 0 ? (
@@ -166,8 +231,9 @@ export function ContactsTab() {
                         onClick={() => handleRemoveContact(contact)}
                         variant="destructive"
                         size="sm"
+                        disabled={removingId === contact.id}
                       >
-                        🗑️
+                        {removingId === contact.id ? '...' : '🗑️'}
                       </Button>
                     </div>
                   </div>

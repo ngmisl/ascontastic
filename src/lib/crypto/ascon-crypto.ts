@@ -1,20 +1,22 @@
 import { Ascon, randomBytes } from 'ascon-js';
-import type { Contact, AsconKeyPair, EncryptionResult, DecryptionResult, CryptoError, StorageState } from '@/types/crypto';
+import type { Contact, AsconKeyPair, EncryptionResult, DecryptionResult, CryptoError, StorageState, EncryptedStorageState } from '@/types/crypto';
 
 export class AsconCrypto {
   private asconKey: Uint8Array | null = null;
   private contacts: Contact[] = [];
+  private masterKey: CryptoKey | null = null;
+  private masterKeySalt: Uint8Array | null = null;
 
   constructor() {
-    this.loadState();
+    this.loadStateFromStorage();
   }
 
   /**
    * Generate Ascon-80pq key (20 bytes for 160-bit security)
    */
-  generateKey(): Uint8Array {
+  async generateKey(): Promise<Uint8Array> {
     this.asconKey = randomBytes(20);
-    this.saveState();
+    await this.saveState();
     return this.asconKey;
   }
 
@@ -110,7 +112,7 @@ export class AsconCrypto {
   /**
    * Add a contact with validation
    */
-  addContact(name: string, keyHex: string): Contact {
+  async addContact(name: string, keyHex: string): Promise<Contact> {
     if (!name.trim()) {
       throw this.createCryptoError('INVALID_INPUT', 'Contact name is required');
     }
@@ -132,19 +134,19 @@ export class AsconCrypto {
     };
     
     this.contacts.push(contact);
-    this.saveState();
+    await this.saveState();
     return contact;
   }
 
   /**
    * Remove a contact by ID
    */
-  removeContact(id: string): boolean {
+  async removeContact(id: string): Promise<boolean> {
     const initialLength = this.contacts.length;
     this.contacts = this.contacts.filter(c => c.id !== id);
     
     if (this.contacts.length < initialLength) {
-      this.saveState();
+      await this.saveState();
       return true;
     }
     
@@ -211,12 +213,12 @@ export class AsconCrypto {
   /**
    * Import key from JSON
    */
-  importKey(jsonData: string): boolean {
+  async importKey(jsonData: string): Promise<boolean> {
     try {
       const data = JSON.parse(jsonData);
       if (data.ascon80pqKey && typeof data.ascon80pqKey === 'string') {
         this.asconKey = this.hexToArrayBuffer(data.ascon80pqKey);
-        this.saveState();
+        await this.saveState();
         return true;
       }
       return false;
@@ -226,54 +228,210 @@ export class AsconCrypto {
   }
 
   /**
+   * Export contacts as JSON
+   */
+  exportContacts(): string | null {
+    if (this.contacts.length === 0) {
+      return null;
+    }
+    const exportData = {
+      contacts: this.contacts,
+      exported: new Date().toISOString()
+    };
+    return JSON.stringify(exportData, null, 2);
+  }
+
+  /**
+   * Import contacts from JSON
+   */
+  async importContacts(jsonData: string): Promise<{
+    imported: number,
+    duplicates: number
+  }> {
+    let imported = 0;
+    let duplicates = 0;
+    try {
+      const data = JSON.parse(jsonData);
+      if (Array.isArray(data.contacts)) {
+        for (const contact of data.contacts) {
+          if (contact.name && contact.keyHex) {
+            const nameExists = this.contacts.some(c => c.name.toLowerCase() === contact.name.toLowerCase());
+            const keyExists = this.contacts.some(c => c.keyHex === contact.keyHex);
+
+            if (!nameExists && !keyExists) {
+              this.contacts.push({
+                id: Date.now().toString() + imported,
+                name: contact.name,
+                keyHex: contact.keyHex,
+                added: contact.added || new Date().toISOString()
+              });
+              imported++;
+            } else {
+              duplicates++;
+            }
+          }
+        }
+        if (imported > 0) {
+          await this.saveState();
+        }
+      }
+    } catch (error) {
+      console.error("Contact import failed:", error);
+      throw this.createCryptoError('INVALID_INPUT', 'Invalid contacts file format.');
+    }
+    return { imported, duplicates };
+  }
+
+  /**
    * Clear all data and keys (secure wipe)
    */
   clearAll(): void {
-    // Securely wipe key from memory
+    // Securely wipe keys from memory
     if (this.asconKey) {
       this.asconKey.fill(0);
-      this.asconKey = null;
     }
-    
+    this.asconKey = null;
+    this.masterKey = null;
+    this.masterKeySalt = null;
+
     this.contacts = [];
     
-    // Clear session storage
+    // Clear local storage
     try {
-      sessionStorage.removeItem('ascon80pq_key');
-      sessionStorage.removeItem('ascon80pq_contacts');
+      localStorage.removeItem('ascon80pq_vault');
     } catch (error) {
-      console.warn('Failed to clear session storage:', error);
+      console.warn('Failed to clear local storage:', error);
     }
   }
 
   /**
-   * State management - session only for security
+   * State management - encrypted in local storage
    */
-  private saveState(): void {
+  async saveState(): Promise<void> {
+    if (!this.masterKey) {
+      throw this.createCryptoError('ENCRYPTION_FAILED', 'Master key is not set. Cannot save state.');
+    }
+
+    const state: StorageState = {
+      asconKey: this.asconKey ? this.arrayBufferToHex(this.asconKey) : null,
+      contacts: this.contacts,
+    };
+
+    const iv = randomBytes(12); // 96-bit IV for AES-GCM
+    const plaintext = new TextEncoder().encode(JSON.stringify(state));
+
+    const encryptedData = await window.crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      this.masterKey,
+      plaintext
+    );
+
+    const vault: EncryptedStorageState = {
+      salt: this.arrayBufferToHex(this.masterKeySalt!),
+      iv: this.arrayBufferToHex(iv),
+      data: this.arrayBufferToBase64(new Uint8Array(encryptedData)),
+    };
+
     try {
-      if (this.asconKey) {
-        sessionStorage.setItem('ascon80pq_key', this.arrayBufferToHex(this.asconKey));
-      }
-      sessionStorage.setItem('ascon80pq_contacts', JSON.stringify(this.contacts));
+      localStorage.setItem('ascon80pq_vault', JSON.stringify(vault));
     } catch (error) {
-      console.error('Failed to save state:', error);
+      throw this.createCryptoError('ENCRYPTION_FAILED', `Failed to save state to local storage: ${error}`);
     }
   }
 
-  private loadState(): void {
+  private loadStateFromStorage(): void {
     try {
-      const keyHex = sessionStorage.getItem('ascon80pq_key');
-      if (keyHex) {
-        this.asconKey = this.hexToArrayBuffer(keyHex);
-      }
-      
-      const contactsJson = sessionStorage.getItem('ascon80pq_contacts');
-      if (contactsJson) {
-        this.contacts = JSON.parse(contactsJson);
+      const vaultString = localStorage.getItem('ascon80pq_vault');
+      if (vaultString) {
+        const vault: EncryptedStorageState = JSON.parse(vaultString);
+        this.masterKeySalt = this.hexToArrayBuffer(vault.salt);
       }
     } catch (error) {
-      console.error('Failed to load state:', error);
-      this.contacts = [];
+      console.error('Failed to load vault from storage:', error);
+      this.clearAll();
+    }
+  }
+
+  async unlock(password: string): Promise<boolean> {
+    if (!this.masterKeySalt) {
+      // New vault, generate salt and derive key
+      this.masterKeySalt = randomBytes(16);
+    }
+
+    try {
+      const keyMaterial = await window.crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(password),
+        'PBKDF2',
+        false,
+        ['deriveKey']
+      );
+
+      const derivedKey = await window.crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: this.masterKeySalt,
+          iterations: 300000,
+          hash: 'SHA-256'
+        },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        true,
+        ['encrypt', 'decrypt']
+      );
+      this.masterKey = derivedKey;
+
+      // If vault exists, try to decrypt it
+      const vaultString = localStorage.getItem('ascon80pq_vault');
+      if (vaultString) {
+        return await this.loadState();
+      }
+
+      return true; // Unlocked for new vault creation
+    } catch (error) {
+      this.masterKey = null;
+      console.error('Unlocking failed:', error);
+      return false;
+    }
+  }
+
+  private async loadState(): Promise<boolean> {
+    if (!this.masterKey) return false;
+
+    try {
+      const vaultString = localStorage.getItem('ascon80pq_vault');
+      if (!vaultString) return false;
+
+      const vault: EncryptedStorageState = JSON.parse(vaultString);
+      const iv = this.hexToArrayBuffer(vault.iv);
+      const data = this.base64ToArrayBuffer(vault.data);
+
+      const decrypted = await window.crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        this.masterKey,
+        data
+      );
+
+      const state: StorageState = JSON.parse(new TextDecoder().decode(decrypted));
+      this.asconKey = state.asconKey ? this.hexToArrayBuffer(state.asconKey) : null;
+      this.contacts = state.contacts || [];
+      return true;
+    } catch (error) {
+      console.error('Failed to load and decrypt state:', error);
+      this.clearAll(); // Clear corrupted data
+      return false;
+    }
+  }
+
+  isLocked(): boolean {
+    return this.hasVault() && this.masterKey === null;
+  }
+
+  hasVault(): boolean {
+    try {
+      return localStorage.getItem('ascon80pq_vault') !== null;
+    } catch {
+      return false;
     }
   }
 
