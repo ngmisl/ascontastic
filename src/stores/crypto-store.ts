@@ -6,6 +6,11 @@ interface CryptoState {
   // Crypto instance
   crypto: AsconCrypto;
   
+  // Vault state
+  isLocked: boolean;
+  hasVault: boolean;
+  isInitialized: boolean;
+
   // Key management
   hasKey: boolean;
   
@@ -17,45 +22,74 @@ interface CryptoState {
   selectedContactId: string;
   
   // Actions
-  generateKey: () => void;
-  addContact: (name: string, keyHex: string) => void;
-  removeContact: (id: string) => void;
+  initialize: () => void;
+  unlock: (password: string) => Promise<boolean>;
+  generateKey: () => Promise<void>;
+  addContact: (name: string, keyHex: string) => Promise<void>;
+  removeContact: (id: string) => Promise<void>;
   setEncryptionMode: (mode: EncryptionMode) => void;
   setSelectedContact: (contactId: string) => void;
-  refreshContacts: () => void;
   clearAll: () => void;
+  importKey: (keyData: string) => Promise<boolean>;
+  exportContacts: () => string | null;
+  importContacts: (jsonData: string) => Promise<{ imported: number, duplicates: number }>;
 }
 
 export const useCryptoStore = create<CryptoState>((set, get) => {
   const cryptoInstance = new AsconCrypto();
 
+  const refreshState = () => {
+    const { crypto } = get();
+    set({
+      hasKey: crypto.getKey() !== null,
+      contacts: crypto.getContacts(),
+      isLocked: crypto.isLocked(),
+      hasVault: crypto.hasVault(),
+    });
+  };
+
   return {
     crypto: cryptoInstance,
-    hasKey: cryptoInstance.getKey() !== null,
-    contacts: cryptoInstance.getContacts(),
+    isLocked: true,
+    hasVault: false,
+    isInitialized: false,
+    hasKey: false,
+    contacts: [],
     currentMode: 'password',
     selectedContactId: '',
 
-    generateKey: () => {
-      const { crypto } = get();
-      crypto.generateKey();
-      set({ hasKey: true });
+    initialize: () => {
+      refreshState();
+      set({ isInitialized: true });
     },
 
-    addContact: (name: string, keyHex: string) => {
+    unlock: async (password: string) => {
       const { crypto } = get();
-      crypto.addContact(name, keyHex);
-      set({ contacts: crypto.getContacts() });
+      const success = await crypto.unlock(password);
+      if (success) {
+        refreshState();
+      }
+      return success;
     },
 
-    removeContact: (id: string) => {
+    generateKey: async () => {
+      const { crypto } = get();
+      await crypto.generateKey();
+      refreshState();
+    },
+
+    addContact: async (name: string, keyHex: string) => {
+      const { crypto } = get();
+      await crypto.addContact(name, keyHex);
+      refreshState();
+    },
+
+    removeContact: async (id: string) => {
       const { crypto, selectedContactId } = get();
-      if (crypto.removeContact(id)) {
+      if (await crypto.removeContact(id)) {
         const newSelectedId = selectedContactId === id ? '' : selectedContactId;
-        set({ 
-          contacts: crypto.getContacts(),
-          selectedContactId: newSelectedId
-        });
+        set({ selectedContactId: newSelectedId });
+        refreshState();
       }
     },
 
@@ -67,12 +101,27 @@ export const useCryptoStore = create<CryptoState>((set, get) => {
       set({ selectedContactId: contactId });
     },
 
-    refreshContacts: () => {
+    importKey: async (keyData: string) => {
       const { crypto } = get();
-      set({ 
-        contacts: crypto.getContacts(),
-        hasKey: crypto.getKey() !== null
-      });
+      const success = await crypto.importKey(keyData);
+      if (success) {
+        refreshState();
+      }
+      return success;
+    },
+
+    exportContacts: () => {
+      const { crypto } = get();
+      return crypto.exportContacts();
+    },
+
+    importContacts: async (jsonData: string) => {
+      const { crypto } = get();
+      const result = await crypto.importContacts(jsonData);
+      if (result.imported > 0) {
+        refreshState();
+      }
+      return result;
     },
 
     clearAll: () => {
@@ -82,7 +131,9 @@ export const useCryptoStore = create<CryptoState>((set, get) => {
         hasKey: false,
         contacts: [],
         selectedContactId: '',
-        currentMode: 'password'
+        currentMode: 'password',
+        isLocked: true,
+        hasVault: false
       });
     }
   };
